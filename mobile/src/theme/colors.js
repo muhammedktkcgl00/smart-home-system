@@ -1,17 +1,17 @@
 const colors = {
-  primary: "#5B8DEF",
+  primary: "#2F80ED",
   secondary: "#7F56D9",
-  background: "#F9FAFB",
+  background: "#F8FAFC",
   surface: "#FFFFFF",
 
-  textPrimary: "#101828",
-  textSecondary: "#667085",
+  textPrimary: "#1F2937",
+  textSecondary: "#6B7280",
 
-  border: "#E4E7EC",
+  border: "#D0D5DD",
 
   success: "#12B76A",
   warning: "#F79009",
-  error: "#F04438"
+  error: "#F04438",
 }
 
 export default colors

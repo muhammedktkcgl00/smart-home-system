@@ -3,7 +3,7 @@ const typography = {
   subtitle: 18,
   body: 16,
   caption: 14,
-  small: 12
+  small: 12,
 }
 
 export default typography
