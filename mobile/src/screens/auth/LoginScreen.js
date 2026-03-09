@@ -1,108 +1,304 @@
 import React, { useState } from "react"
-import { View, StyleSheet, Image, TouchableOpacity } from "react-native"
+import {
+  View,
+  StyleSheet,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native"
+import { Feather } from "@expo/vector-icons"
 import { useNavigation } from "@react-navigation/native"
 
 import AppText from "../../components/common/AppText"
-import AppInput from "../../components/common/AppInput"
 import AppButton from "../../components/common/AppButton"
 import colors from "../../theme/colors"
-import spacing from "../../theme/spacing"
+import { useAuth } from "../../store/auth/AuthContext"
 
 export default function LoginScreen() {
   const navigation = useNavigation()
+  const { login } = useAuth()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [remember, setRemember] = useState(false)
+
+  const handleLogin = () => {
+    login()
+  }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.imageWrapper}>
-        <Image
-          source={require("../../../assets/images/login-home.png")}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      </View>
+    <View style={styles.screen}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.imageWrapper}>
+          <Image
+            source={require("../../../assets/images/login-home.png")}
+            style={styles.image}
+            resizeMode="contain"
+          />
+        </View>
 
-      <View style={styles.content}>
-        <AppText style={styles.title}>Sign In</AppText>
-        <AppText style={styles.subtitle}>
-          Enter your email and password to continue
-        </AppText>
+        <View style={styles.card}>
+          <AppText style={styles.title}>Login</AppText>
 
-        <View style={styles.form}>
-          <AppInput
-            placeholder="Email"
+          <AppText style={styles.subtitle}>
+            Welcome back! Please enter your details.
+          </AppText>
+
+          <TextInput
+            style={styles.input}
+            placeholder="joe.doe@gmail.com"
+            placeholderTextColor="#98A2B3"
             value={email}
             onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
           />
 
-          <View style={styles.inputSpacer} />
+          <View style={styles.passwordWrapper}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Password"
+              placeholderTextColor="#98A2B3"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
 
-          <AppInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Feather
+                name={showPassword ? "eye" : "eye-off"}
+                size={18}
+                color="#98A2B3"
+              />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
-            style={styles.forgotWrapper}
-            onPress={() => navigation.navigate("ResetPassword")}
+            style={styles.rememberRow}
+            onPress={() => setRemember(!remember)}
+            activeOpacity={0.8}
           >
-            <AppText style={styles.forgotText}>Forgot Password?</AppText>
+            <View style={[styles.checkbox, remember && styles.checkboxActive]} />
+            <AppText style={styles.rememberText}>Remember information</AppText>
           </TouchableOpacity>
 
-          <AppButton title="Sign In" onPress={() => {}} />
+          <AppButton title="Login" onPress={handleLogin} />
+
+          <TouchableOpacity
+            style={styles.forgot}
+            onPress={() => navigation.navigate("ResetPassword")}
+          >
+            <AppText style={styles.forgotText}>Forget password?</AppText>
+          </TouchableOpacity>
+
+          <View style={styles.dividerRow}>
+            <View style={styles.divider} />
+            <AppText style={styles.or}>or</AppText>
+            <View style={styles.divider} />
+          </View>
+
+          <TouchableOpacity style={styles.socialButton} activeOpacity={0.85}>
+            <Image
+              source={require("../../../assets/icons/google.png")}
+              style={styles.icon}
+            />
+            <View style={styles.socialDivider} />
+            <AppText style={styles.socialText}>Login with Google</AppText>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.socialButton} activeOpacity={0.85}>
+            <Image
+              source={require("../../../assets/icons/facebook.png")}
+              style={styles.icon}
+            />
+            <View style={styles.socialDivider} />
+            <AppText style={styles.socialText}>Login with Facebook</AppText>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.socialButton} activeOpacity={0.85}>
+            <Image
+              source={require("../../../assets/icons/apple.png")}
+              style={styles.icon}
+            />
+            <View style={styles.socialDivider} />
+            <AppText style={styles.socialText}>Login with Apple</AppText>
+          </TouchableOpacity>
+
+          <View style={styles.signupRow}>
+            <AppText style={styles.signupText}>First time here?</AppText>
+
+            <TouchableOpacity>
+              <AppText style={styles.signupLink}>Sign up for free</AppText>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    backgroundColor: colors.background,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
+    backgroundColor: "#F2F4F7",
   },
+
   imageWrapper: {
     alignItems: "center",
-    marginTop: spacing.lg,
-    marginBottom: spacing.lg,
+    marginTop: 40,
   },
+
   image: {
-    width: 240,
-    height: 220,
+    width: 400,
+    height: 340,
   },
-  content: {
-    flex: 1,
+
+  card: {
+    marginTop: 1,
+    marginHorizontal: 2,
+    backgroundColor: "white",
+    borderRadius: 32,
+    padding: 24,
   },
+
   title: {
-    fontSize: 30,
+    fontSize: 22,
     fontWeight: "700",
     textAlign: "center",
-    marginBottom: spacing.sm,
   },
+
   subtitle: {
+    fontSize: 14,
+    color: "#667085",
     textAlign: "center",
-    color: colors.textSecondary,
-    marginBottom: spacing.xl,
+    marginTop: 6,
+    marginBottom: 20,
   },
-  form: {
-    marginTop: spacing.md,
+
+  input: {
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#D0D5DD",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    marginBottom: 14,
   },
-  inputSpacer: {
-    height: spacing.md,
+
+  passwordWrapper: {
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#D0D5DD",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    marginBottom: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  forgotWrapper: {
-    alignSelf: "flex-end",
-    marginTop: spacing.sm,
-    marginBottom: spacing.lg,
+
+  passwordInput: {
+    flex: 1,
   },
+
+  rememberRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 18,
+  },
+
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderWidth: 1,
+    borderColor: "#D0D5DD",
+    borderRadius: 4,
+    marginRight: 10,
+  },
+
+  checkboxActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+
+  rememberText: {
+    color: "#667085",
+  },
+
+  forgot: {
+    alignItems: "center",
+    marginTop: 30,
+  },
+
   forgotText: {
     color: colors.primary,
+    fontWeight: "600",
+  },
+
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 40,
+  },
+
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#E4E7EC",
+  },
+
+  or: {
+    marginHorizontal: 10,
+    color: "#667085",
+  },
+
+  socialButton: {
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#D0D5DD",
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    backgroundColor: "#FFFFFF",
+  },
+
+  icon: {
+    width: 20,
+    height: 20,
+  },
+
+  socialDivider: {
+    width: 1,
+    height: 22,
+    backgroundColor: "#E4E7EC",
+    marginLeft: 14,
+    marginRight: 14,
+  },
+
+  socialText: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 14,
+    color: "#344054",
+    marginRight: 20,
+  },
+
+  signupRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 15,
+  },
+
+  signupText: {
+    color: "#667085",
+  },
+
+  signupLink: {
+    color: colors.primary,
+    marginLeft: 4,
     fontWeight: "600",
   },
 })

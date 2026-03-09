@@ -1,81 +1,314 @@
-import React, { useState } from "react"
-import { View, StyleSheet, TouchableOpacity } from "react-native"
+import React, { useMemo, useState } from "react"
+import {
+  View,
+  StyleSheet,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native"
+import { Feather } from "@expo/vector-icons"
 import { useNavigation } from "@react-navigation/native"
 
 import AppText from "../../components/common/AppText"
-import AppInput from "../../components/common/AppInput"
 import AppButton from "../../components/common/AppButton"
 import colors from "../../theme/colors"
-import spacing from "../../theme/spacing"
 
 export default function ResetPasswordScreen() {
   const navigation = useNavigation()
-  const [email, setEmail] = useState("")
+
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  const hasMinLength = password.length >= 8
+  const hasNumberOrSymbol = /[0-9!@#$%^&*(),.?":{}|<>_\-\\[\]/+=~`]/.test(password)
+  const hasLowerAndUppercase =
+    /[a-z]/.test(password) && /[A-Z]/.test(password)
+
+  const strengthLevel = useMemo(() => {
+    let level = 0
+    if (hasMinLength) level += 1
+    if (hasNumberOrSymbol) level += 1
+    if (hasLowerAndUppercase) level += 1
+    return level
+  }, [hasMinLength, hasNumberOrSymbol, hasLowerAndUppercase])
+
+  const getRuleColor = (passed) => (passed ? "#22C55E" : "#98A2B3")
+  const getRuleIcon = (passed) => (passed ? "✓" : "•")
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <AppText style={styles.title}>Reset Password</AppText>
-        <AppText style={styles.subtitle}>
-          Enter your email address and we will send you a reset link.
-        </AppText>
-      </View>
+    <View style={styles.screen}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.imageWrapper}>
+          <Image
+            source={require("../../../assets/images/login-home.png")}
+            style={styles.image}
+            resizeMode="contain"
+          />
+        </View>
 
-      <View style={styles.form}>
-        <AppInput
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-        />
+        <View style={styles.card}>
+          <AppText style={styles.title}>Reset password</AppText>
 
-        <View style={styles.buttonSpacer} />
+          <View style={styles.passwordWrapper}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="New password"
+              placeholderTextColor="#98A2B3"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
 
-        <AppButton title="Send Reset Link" onPress={() => {}} />
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              activeOpacity={0.8}
+            >
+              <Feather
+                name={showPassword ? "eye" : "eye-off"}
+                size={18}
+                color="#98A2B3"
+              />
+            </TouchableOpacity>
+          </View>
 
-        <TouchableOpacity
-          style={styles.backWrapper}
-          onPress={() => navigation.navigate("Login")}
-        >
-          <AppText style={styles.backText}>Back to Sign In</AppText>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.strengthTrack}>
+            <View
+              style={[
+                styles.strengthFill,
+                strengthLevel === 0 && styles.strengthFillEmpty,
+                strengthLevel === 1 && styles.strengthFillWeak,
+                strengthLevel === 2 && styles.strengthFillMedium,
+                strengthLevel === 3 && styles.strengthFillStrong,
+              ]}
+            />
+          </View>
+
+          <View style={styles.rulesWrapper}>
+            <View style={styles.ruleRow}>
+              <AppText
+                style={[
+                  styles.ruleIcon,
+                  { color: getRuleColor(hasMinLength) },
+                ]}
+              >
+                {getRuleIcon(hasMinLength)}
+              </AppText>
+
+              <AppText
+                style={[
+                  styles.ruleText,
+                  { color: getRuleColor(hasMinLength) },
+                ]}
+              >
+                Least 8 characters
+              </AppText>
+            </View>
+
+            <View style={styles.ruleRow}>
+              <AppText
+                style={[
+                  styles.ruleIcon,
+                  { color: getRuleColor(hasNumberOrSymbol) },
+                ]}
+              >
+                {getRuleIcon(hasNumberOrSymbol)}
+              </AppText>
+
+              <AppText
+                style={[
+                  styles.ruleText,
+                  { color: getRuleColor(hasNumberOrSymbol) },
+                ]}
+              >
+                Least one number (0-9) or symbol
+              </AppText>
+            </View>
+
+            <View style={styles.ruleRow}>
+              <AppText
+                style={[
+                  styles.ruleIcon,
+                  { color: getRuleColor(hasLowerAndUppercase) },
+                ]}
+              >
+                {getRuleIcon(hasLowerAndUppercase)}
+              </AppText>
+
+              <AppText
+                style={[
+                  styles.ruleText,
+                  { color: getRuleColor(hasLowerAndUppercase) },
+                ]}
+              >
+                Lowercase (a-z) and uppercase (A-Z)
+              </AppText>
+            </View>
+          </View>
+
+          <View style={styles.confirmWrapper}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Confirm new password"
+              placeholderTextColor="#98A2B3"
+              secureTextEntry={!showConfirmPassword}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+
+            <TouchableOpacity
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              activeOpacity={0.8}
+            >
+              <Feather
+                name={showConfirmPassword ? "eye" : "eye-off"}
+                size={18}
+                color="#98A2B3"
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.buttonWrapper}>
+            <AppButton title="Submitting..." onPress={() => {}} />
+          </View>
+        </View>
+      </ScrollView>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    backgroundColor: colors.background,
-    paddingHorizontal: spacing.lg,
-    paddingTop: 80,
+    backgroundColor: "#F2F4F7",
   },
-  header: {
-    marginBottom: spacing.xl,
+
+  scrollContent: {
+    alignItems: "center",
+    paddingBottom: 24,
   },
+
+  imageWrapper: {
+    marginTop: 28,
+    marginBottom: 10,
+  },
+
+  image: {
+    width: 400,
+    height: 310,
+  },
+
+  card: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 28,
+  },
+
   title: {
-    fontSize: 30,
+    fontSize: 22,
     fontWeight: "700",
     textAlign: "center",
-    marginBottom: spacing.sm,
+    marginBottom: 20,
+    color: "#344054",
   },
-  subtitle: {
-    textAlign: "center",
-    color: colors.textSecondary,
-    lineHeight: 22,
-  },
-  form: {
-    marginTop: spacing.lg,
-  },
-  buttonSpacer: {
-    height: spacing.lg,
-  },
-  backWrapper: {
+
+  passwordWrapper: {
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#D0D5DD",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: spacing.lg,
+    justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
   },
-  backText: {
-    color: colors.primary,
-    fontWeight: "600",
+
+  confirmWrapper: {
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#D0D5DD",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    marginTop: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
+  },
+
+  passwordInput: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.textPrimary,
+  },
+
+  strengthTrack: {
+    width: "100%",
+    height: 3,
+    borderRadius: 999,
+    backgroundColor: "#DCE3EC",
+    overflow: "hidden",
+    marginBottom: 14,
+  },
+
+  strengthFill: {
+    height: "100%",
+  },
+
+  strengthFillEmpty: {
+    width: "0%",
+    backgroundColor: "transparent",
+  },
+
+  strengthFillWeak: {
+    width: "33%",
+    backgroundColor: "#F59E0B",
+  },
+
+  strengthFillMedium: {
+    width: "66%",
+    backgroundColor: "#F59E0B",
+  },
+
+  strengthFillStrong: {
+    width: "100%",
+    backgroundColor: "#22C55E",
+  },
+
+  rulesWrapper: {
+    marginTop: 2,
+  },
+
+  ruleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  ruleIcon: {
+    width: 16,
+    fontSize: 14,
+    marginRight: 8,
+    textAlign: "center",
+  },
+
+  ruleText: {
+    fontSize: 14,
+  },
+
+  buttonWrapper: {
+    marginTop: 30,
   },
 })

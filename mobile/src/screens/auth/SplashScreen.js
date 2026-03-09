@@ -5,14 +5,13 @@ import { useNavigation } from "@react-navigation/native"
 import AppText from "../../components/common/AppText"
 import AppButton from "../../components/common/AppButton"
 import colors from "../../theme/colors"
-import spacing from "../../theme/spacing"
 
 export default function SplashScreen() {
   const navigation = useNavigation()
 
   return (
     <View style={styles.container}>
-      <View style={styles.topSection}>
+      <View style={styles.imageWrapper}>
         <Image
           source={require("../../../assets/images/splash-home.png")}
           style={styles.image}
@@ -30,9 +29,14 @@ export default function SplashScreen() {
           few taps.
         </AppText>
 
-        <View style={styles.dotsWrapper}>
+        <View style={styles.dotsRow}>
           <View style={styles.dot} />
-          <View style={[styles.dot, styles.activeDot]} />
+          <View style={styles.dot} />
+
+          <View style={styles.activeDotOuter}>
+            <View style={styles.activeDotInner} />
+          </View>
+
           <View style={styles.dot} />
           <View style={styles.dot} />
         </View>
@@ -51,54 +55,83 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xl,
+    backgroundColor: "#F2F4F7",
+    paddingTop: 24,
+    paddingBottom: 32,
+    paddingHorizontal: 28,
     justifyContent: "space-between",
   },
-  topSection: {
-    alignItems: "center",
-    marginTop: spacing.lg,
+
+  imageWrapper: {
+    width: "100%",
+    alignItems: "flex-start",
+    marginTop: 8,
   },
+
   image: {
-    width: 300,
-    height: 300,
+    width: 340,
+    height: 440,
+    marginLeft: 25,
   },
+
   content: {
     alignItems: "center",
+    marginTop: -8,
   },
+
   title: {
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: "700",
     textAlign: "center",
+    color: "#344054",
     lineHeight: 38,
-    marginBottom: spacing.md,
+    marginBottom: 14,
   },
+
   description: {
+    fontSize: 14,
     textAlign: "center",
-    color: colors.textSecondary,
+    color: "#98A2B3",
     lineHeight: 22,
-    paddingHorizontal: spacing.md,
+    maxWidth: 300,
   },
-  dotsWrapper: {
+
+  dotsRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: spacing.lg,
+    justifyContent: "center",
+    marginTop: 22,
   },
+
   dot: {
-    width: 8,
-    height: 8,
+    width: 10,
+    height: 10,
     borderRadius: 999,
     backgroundColor: "#D0D5DD",
-    marginHorizontal: 4,
+    marginHorizontal: 5,
   },
-  activeDot: {
-    width: 12,
-    height: 12,
+
+  activeDotOuter: {
+    width: 22,
+    height: 22,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 5,
+    backgroundColor: "transparent",
+  },
+
+  activeDotInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
     backgroundColor: colors.primary,
   },
+
   buttonWrapper: {
-    marginBottom: spacing.md,
+    width: "100%",
+    marginTop: 12,
   },
 })
