@@ -80,13 +80,13 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 28,
-    fontWeight: "700",
-    textAlign: "center",
-    color: "#344054",
-    lineHeight: 38,
-    marginBottom: 14,
-  },
+  fontSize: 28,
+  fontFamily: "CatamaranBold",
+  textAlign: "center",
+  color: "#344054",
+  lineHeight: 38,
+  marginBottom: 14,
+},
 
   description: {
     fontSize: 14,

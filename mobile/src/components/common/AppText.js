@@ -16,5 +16,6 @@ const styles = StyleSheet.create({
   text: {
     color: colors.textPrimary,
     fontSize: typography.body,
+    fontFamily: "NotoSansRegular",
   },
 })

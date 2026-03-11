@@ -215,12 +215,12 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 22,
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 20,
-    color: "#344054",
-  },
+  fontSize: 22,
+  fontFamily: "CatamaranBold",
+  textAlign: "center",
+  marginBottom: 20,
+  color: "#344054",
+},
 
   passwordWrapper: {
     height: 52,
@@ -249,10 +249,11 @@ const styles = StyleSheet.create({
   },
 
   passwordInput: {
-    flex: 1,
-    fontSize: 16,
-    color: colors.textPrimary,
-  },
+  flex: 1,
+  fontSize: 16,
+  color: colors.textPrimary,
+  fontFamily: "NotoSansRegular",
+},
 
   strengthTrack: {
     width: "100%",
@@ -305,8 +306,9 @@ const styles = StyleSheet.create({
   },
 
   ruleText: {
-    fontSize: 14,
-  },
+  fontSize: 14,
+  fontFamily: "NotoSansRegular",
+},
 
   buttonWrapper: {
     marginTop: 30,

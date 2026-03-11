@@ -1,52 +1,101 @@
-import React from "react"
-import { View, StyleSheet, TouchableOpacity } from "react-native"
+import React from "react";
+import {
+  SafeAreaView,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  StatusBar,
+} from "react-native";
+import OrbitWelcomeVisual from "../../components/home/OrbitWelcomeVisual";
 
-import AppText from "../../components/common/AppText"
-import colors from "../../theme/colors"
-import { useAuth } from "../../store/auth/AuthContext"
-
-export default function WelcomeScreen() {
-  const { logout } = useAuth()
+export default function WelcomeScreen({ navigation }) {
+  const handleGetStarted = () => {
+    navigation.navigate("HomeOverview");
+  };
 
   return (
-    <View style={styles.container}>
-      <AppText style={styles.title}>Welcome Screen</AppText>
-      <AppText style={styles.subtitle}>Fake login çalışıyor.</AppText>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <View style={styles.container}>
+        <View style={styles.visualSection}>
+          <OrbitWelcomeVisual />
+        </View>
 
-      <TouchableOpacity style={styles.button} onPress={logout} activeOpacity={0.8}>
-        <AppText style={styles.buttonText}>Logout</AppText>
-      </TouchableOpacity>
-    </View>
-  )
+        <View style={styles.textSection}>
+          <Text style={styles.title}>Hello, Kristin!</Text>
+          <Text style={styles.subtitle}>Good morning, welcome back.</Text>
+        </View>
+
+        <View style={styles.bottomSection}>
+          <TouchableOpacity style={styles.button} onPress={handleGetStarted}>
+            <Text style={styles.buttonText}>Get Started</Text>
+          </TouchableOpacity>
+
+          <View style={styles.homeIndicator} />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+
   container: {
     flex: 1,
-    backgroundColor: "#F2F4F7",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 24,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 22,
+    paddingTop: -20,
+    paddingBottom: 10,
   },
+
+  visualSection: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 18,
+  },
+
+  textSection: {
+    alignItems: "center",
+    marginTop: 100,
+    marginBottom: 100,
+  },
+
   title: {
-    fontSize: 28,
+    fontSize: 22,
+    lineHeight: 28,
     fontWeight: "700",
-    color: colors.textPrimary,
+    color: "#3E4652",
     marginBottom: 10,
   },
+
   subtitle: {
     fontSize: 15,
-    color: colors.textSecondary,
-    marginBottom: 24,
+    lineHeight: 21,
+    color: "#8B96A8",
   },
+
+  bottomSection: {
+    paddingBottom: 20,
+  },
+
   button: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
+    width: "100%",
+    height: 56,
     borderRadius: 14,
+    backgroundColor: "#2F80ED",
+    alignItems: "center",
+    justifyContent: "center",
   },
+
   buttonText: {
     color: "#FFFFFF",
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "600",
   },
-})
+});
