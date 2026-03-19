@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -7,12 +7,40 @@ import {
   TouchableOpacity,
   Image,
   StatusBar,
+  Modal,
+  Pressable,
 } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../../store/auth/AuthContext";
 
 export default function HomeOverviewScreen({ navigation }) {
+  const [menuVisible, setMenuVisible] = useState(false);
+  const { logout } = useAuth();
+
   const handleContinue = () => {
     navigation.navigate("SetSpaceName");
+  };
+
+  const openMenu = () => {
+    setMenuVisible(true);
+  };
+
+  const closeMenu = () => {
+    setMenuVisible(false);
+  };
+
+  const handleProfilePress = () => {
+    navigation.navigate("Profile");
+  };
+
+  const handleMenuNavigate = (screen, params) => {
+    closeMenu();
+    navigation.navigate(screen, params);
+  };
+
+  const handleLogout = () => {
+    closeMenu();
+    logout();
   };
 
   return (
@@ -21,7 +49,11 @@ export default function HomeOverviewScreen({ navigation }) {
 
       <View style={styles.container}>
         <View style={styles.header}>
-          <View style={styles.profileWrap}>
+          <TouchableOpacity
+            style={styles.profileWrap}
+            activeOpacity={0.8}
+            onPress={handleProfilePress}
+          >
             <Image
               source={require("../../../assets/images/avatar.png")}
               style={styles.avatar}
@@ -32,7 +64,7 @@ export default function HomeOverviewScreen({ navigation }) {
               <Text style={styles.welcomeText}>Welcome home,</Text>
               <Text style={styles.nameText}>Kristin</Text>
             </View>
-          </View>
+          </TouchableOpacity>
 
           <View style={styles.actions}>
             <TouchableOpacity style={styles.iconButton}>
@@ -41,8 +73,8 @@ export default function HomeOverviewScreen({ navigation }) {
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.iconButton}>
-              <Ionicons name="menu-outline" size={24} color="#6B7485" />
+            <TouchableOpacity style={styles.iconButton} onPress={openMenu}>
+              <Ionicons name="reorder-two-outline" size={24} color="#6B7485" />
             </TouchableOpacity>
           </View>
         </View>
@@ -71,6 +103,81 @@ export default function HomeOverviewScreen({ navigation }) {
 
         <View style={styles.homeIndicator} />
       </View>
+
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeMenu}
+      >
+        <View style={styles.modalWrapper}>
+          <Pressable style={styles.overlay} onPress={closeMenu} />
+
+          <View style={styles.sideMenu}>
+            <View style={styles.menuHeader}></View>
+
+            <View style={styles.menuList}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleMenuNavigate("HomeDashboard")}
+              >
+                <Text style={styles.menuItemText}>Home</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleMenuNavigate("RoomsMapView")}
+              >
+                <Text style={styles.menuItemText}>Rooms</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleMenuNavigate("AllDevices")}
+              >
+                <Text style={styles.menuItemText}>Devices</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() =>
+                  handleMenuNavigate("HomeDashboard", { scrollTo: "members" })
+                }
+              >
+                <Text style={styles.menuItemText}>Members</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleMenuNavigate("Statistics")}
+              >
+                <Text style={styles.menuItemText}>Statistics</Text>
+              </TouchableOpacity>
+
+              <View style={styles.menuDivider} />
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleMenuNavigate("Profile")}
+              >
+                <Text style={styles.menuItemText}>Profile</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleMenuNavigate("ScheduleCustomDate")}
+              >
+                <Text style={styles.menuItemText}>Setting</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.logoutRow} onPress={handleLogout}>
+              <Ionicons name="log-out-outline" size={18} color="#98A2B3" />
+              <Text style={styles.logoutText}>Log out</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -184,6 +291,98 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#FFFFFF",
     fontSize: 16,
+    fontFamily: "NotoSansMedium",
+  },
+
+  modalWrapper: {
+    flex: 1,
+    flexDirection: "row",
+  },
+
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.08)",
+  },
+
+  sideMenu: {
+    width: "78%",
+    backgroundColor: "#FFFFFF",
+    paddingTop: 0,
+    paddingHorizontal: 24,
+    borderTopRightRadius: 28,
+    borderBottomRightRadius: 28,
+    shadowColor: "#000",
+    shadowOffset: { width: 4, height: 0 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+
+  menuHeader: {
+    marginBottom: 10,
+  },
+
+  menuProfileWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  menuAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 12,
+  },
+
+  menuWelcomeText: {
+    fontSize: 14,
+    color: "#9AA4B5",
+    fontFamily: "NotoSansRegular",
+  },
+
+  menuNameText: {
+    fontSize: 18,
+    color: "#434C59",
+    fontFamily: "CatamaranBold",
+    lineHeight: 22,
+  },
+
+  menuList: {
+    marginTop: 4,
+  },
+
+  menuItem: {
+    paddingVertical: 16,
+  },
+
+  menuItemText: {
+    fontSize: 17,
+    color: "#8A94A6",
+    fontFamily: "NotoSansMedium",
+  },
+
+  menuItemActive: {
+    color: "#2F80ED",
+  },
+
+  menuDivider: {
+    height: 1,
+    backgroundColor: "#E7EBF1",
+    marginTop: 12,
+    marginBottom: 18,
+  },
+
+  logoutRow: {
+    marginTop: "auto",
+    marginBottom: 36,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  logoutText: {
+    marginLeft: 10,
+    fontSize: 15,
+    color: "#98A2B3",
     fontFamily: "NotoSansMedium",
   },
 });
