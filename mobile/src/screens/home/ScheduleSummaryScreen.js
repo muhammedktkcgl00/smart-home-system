@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -12,34 +12,44 @@ import {
 } from "react-native";
 import { Feather, AntDesign } from "@expo/vector-icons";
 
-const MIN_SIZE = 20;
+const MIN_SIZE = 0;
 const MAX_SIZE = 40;
-const TICK_SPACING = 10;
-const TICKS_PER_UNIT = 5;
-const SIDE_PADDING = 170;
+const TICK_SPACING = 11;
+const SUBTICKS_PER_UNIT = 10;
+const INITIAL_SIZE = 20;
 
 export default function SpaceTypeScreen({ navigation }) {
   const [roomName, setRoomName] = useState("Living room");
   const [unit, setUnit] = useState("m2");
-  const [roomSize, setRoomSize] = useState(20);
+  const [roomSize, setRoomSize] = useState(INITIAL_SIZE);
+  const [rulerWidth, setRulerWidth] = useState(0);
 
   const scrollRef = useRef(null);
+  const didSetInitialPosition = useRef(false);
 
   const ticks = useMemo(() => {
     const result = [];
+    const totalTickCount = (MAX_SIZE - MIN_SIZE) * SUBTICKS_PER_UNIT + 1;
 
-    for (let size = MIN_SIZE; size <= MAX_SIZE; size += 1) {
-      for (let step = 0; step < TICKS_PER_UNIT; step += 1) {
-        const globalIndex =
-          (size - MIN_SIZE) * TICKS_PER_UNIT + step;
+    for (let index = 0; index < totalTickCount; index += 1) {
+      const remainder = index % SUBTICKS_PER_UNIT;
+      const rawValue = MIN_SIZE + index / SUBTICKS_PER_UNIT;
+      const snappedValue = Math.round(rawValue);
 
-        result.push({
-          id: `${size}-${step}`,
-          size,
-          step,
-          globalIndex,
-        });
+      let type = "minor";
+
+      if (remainder === 0) {
+        type = "major";
+      } else if (remainder === 5) {
+        type = "medium";
       }
+
+      result.push({
+        id: `tick-${index}`,
+        index,
+        type,
+        value: snappedValue,
+      });
     }
 
     return result;
@@ -58,36 +68,81 @@ export default function SpaceTypeScreen({ navigation }) {
     navigation.navigate("AllDevices");
   };
 
-  const handleSelectSize = (size) => {
-    setRoomSize(size);
+  const getTickIndexForValue = (value) => {
+    const clampedValue = Math.max(MIN_SIZE, Math.min(MAX_SIZE, value));
+    return (clampedValue - MIN_SIZE) * SUBTICKS_PER_UNIT;
+  };
 
-    const tickIndex = (size - MIN_SIZE) * TICKS_PER_UNIT + 4;
+  const getScrollXForValue = (value) => {
+    return getTickIndexForValue(value) * TICK_SPACING;
+  };
 
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        x: Math.max(tickIndex * TICK_SPACING - SIDE_PADDING + 8, 0),
-        animated: true,
+  const getNearestValueFromScrollX = (scrollX) => {
+    const rawIndex = scrollX / TICK_SPACING;
+    const nearestValue = Math.round(MIN_SIZE + rawIndex / SUBTICKS_PER_UNIT);
+
+    return Math.max(MIN_SIZE, Math.min(MAX_SIZE, nearestValue));
+  };
+
+  const scrollToValue = (value, animated = true) => {
+    if (!scrollRef.current) return;
+
+    scrollRef.current.scrollTo({
+      x: getScrollXForValue(value),
+      animated,
+    });
+  };
+
+  const ensureInitialRulerPosition = () => {
+    if (rulerWidth <= 0 || didSetInitialPosition.current) return;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        scrollToValue(INITIAL_SIZE, false);
+        didSetInitialPosition.current = true;
       });
-    }
+    });
+  };
+
+  useEffect(() => {
+    ensureInitialRulerPosition();
+  }, [rulerWidth]);
+
+  const handleSelectValue = (value) => {
+    const clampedValue = Math.max(MIN_SIZE, Math.min(MAX_SIZE, value));
+    setRoomSize(clampedValue);
+    scrollToValue(clampedValue, true);
+  };
+
+  const handleRulerScroll = (event) => {
+    const scrollX = event.nativeEvent.contentOffset.x;
+    const nextValue = getNearestValueFromScrollX(scrollX);
+
+    setRoomSize((prev) => (prev === nextValue ? prev : nextValue));
+  };
+
+  const handleRulerScrollEnd = (event) => {
+    const scrollX = event.nativeEvent.contentOffset.x;
+    const nextValue = getNearestValueFromScrollX(scrollX);
+
+    setRoomSize(nextValue);
+    scrollToValue(nextValue, true);
   };
 
   const renderTick = (tickItem) => {
-    const patternIndex = tickItem.globalIndex % 10;
-    const isMedium = patternIndex === 4;
-    const isMajor = patternIndex === 9;
-
     return (
       <TouchableOpacity
         key={tickItem.id}
         activeOpacity={0.85}
-        onPress={() => handleSelectSize(tickItem.size)}
+        onPress={() => handleSelectValue(tickItem.value)}
         style={styles.tickTouch}
       >
         <View
           style={[
             styles.tick,
-            isMedium && styles.tickMedium,
-            isMajor && styles.tickMajor,
+            tickItem.type === "minor" && styles.tickMinor,
+            tickItem.type === "medium" && styles.tickMedium,
+            tickItem.type === "major" && styles.tickMajor,
           ]}
         />
       </TouchableOpacity>
@@ -217,12 +272,30 @@ export default function SpaceTypeScreen({ navigation }) {
               </Text>
             </View>
 
-            <View style={styles.rulerWrapper}>
+            <View
+              style={styles.rulerWrapper}
+              onLayout={(event) =>
+                setRulerWidth(event.nativeEvent.layout.width)
+              }
+            >
               <ScrollView
                 ref={scrollRef}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.rulerContent}
+                bounces={false}
+                scrollEventThrottle={16}
+                snapToInterval={TICK_SPACING}
+                decelerationRate="fast"
+                contentContainerStyle={[
+                  styles.rulerContent,
+                  rulerWidth > 0 && {
+                    paddingHorizontal: rulerWidth / 2 - TICK_SPACING / 2,
+                  },
+                ]}
+                onContentSizeChange={ensureInitialRulerPosition}
+                onScroll={handleRulerScroll}
+                onMomentumScrollEnd={handleRulerScrollEnd}
+                onScrollEndDrag={handleRulerScrollEnd}
               >
                 {ticks.map(renderTick)}
               </ScrollView>
@@ -491,47 +564,52 @@ const styles = StyleSheet.create({
 
   rulerWrapper: {
     marginTop: 8,
-    height: 66,
+    height: 78,
     justifyContent: "flex-end",
     position: "relative",
+    overflow: "hidden",
   },
 
   rulerContent: {
-    paddingHorizontal: SIDE_PADDING,
-    alignItems: "flex-end",
-    paddingBottom: 4,
+    alignItems: "center",
+    height: 78,
   },
 
   tickTouch: {
     width: TICK_SPACING,
-    height: 54,
+    height: 78,
     alignItems: "center",
-    justifyContent: "flex-end",
+    justifyContent: "center",
   },
 
   tick: {
-    width: 3,
-    height: 20,
+    width: 4,
     borderRadius: 999,
-    backgroundColor: "#D9E9FF",
+  },
+
+  tickMinor: {
+    height: 32,
+    backgroundColor: "#D7E8FF",
   },
 
   tickMedium: {
-    height: 30,
+    height: 48,
+    backgroundColor: "#C6DCF9",
   },
 
   tickMajor: {
-    height: 44,
+    height: 68,
+    backgroundColor: "#C6DCF9",
   },
 
   centerIndicator: {
     position: "absolute",
     alignSelf: "center",
     width: 4,
-    height: 44,
+    height: 68,
     borderRadius: 999,
     backgroundColor: "#2F80ED",
-    bottom: 4,
+    top: 5,
   },
 
   bottomSection: {

@@ -8,6 +8,7 @@ import {
   StatusBar,
   Image,
   ScrollView,
+  Modal,
 } from "react-native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -17,12 +18,60 @@ export default function RoomDetailScreen({ navigation }) {
   const [humidifierEnabled, setHumidifierEnabled] = useState(true);
   const [lampEnabled, setLampEnabled] = useState(false);
 
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [selectedDevice, setSelectedDevice] = useState(null);
+
   const handleGoBack = () => {
     navigation.goBack();
   };
 
   const handleEdit = () => {
     // sonra bağlarız
+  };
+
+  const openTurnOffModal = (device) => {
+    setSelectedDevice(device);
+    setConfirmVisible(true);
+  };
+
+  const closeTurnOffModal = () => {
+    setConfirmVisible(false);
+    setSelectedDevice(null);
+  };
+
+  const confirmTurnOff = () => {
+    if (!selectedDevice) return;
+
+    if (selectedDevice.key === "lamp") {
+      setLampEnabled(false);
+    }
+
+    if (selectedDevice.key === "speaker") {
+      setSpeakerEnabled(false);
+    }
+
+    if (selectedDevice.key === "air") {
+      setAirEnabled(false);
+    }
+
+    if (selectedDevice.key === "humidifier") {
+      setHumidifierEnabled(false);
+    }
+
+    closeTurnOffModal();
+  };
+
+  const handleDeviceToggle = (deviceKey, isEnabled, setState, imageSource, title) => {
+    if (isEnabled) {
+      openTurnOffModal({
+        key: deviceKey,
+        title,
+        imageSource,
+      });
+      return;
+    }
+
+    setState(true);
   };
 
   return (
@@ -113,7 +162,15 @@ export default function RoomDetailScreen({ navigation }) {
                   lampEnabled && styles.verticalSwitchActive,
                 ]}
                 activeOpacity={0.85}
-                onPress={() => setLampEnabled((prev) => !prev)}
+                onPress={() =>
+                  handleDeviceToggle(
+                    "lamp",
+                    lampEnabled,
+                    setLampEnabled,
+                    require("../../../assets/images/Nlamp.png"),
+                    "lights"
+                  )
+                }
               >
                 <View
                   style={[
@@ -148,7 +205,15 @@ export default function RoomDetailScreen({ navigation }) {
                   speakerEnabled && styles.verticalSwitchActive,
                 ]}
                 activeOpacity={0.85}
-                onPress={() => setSpeakerEnabled((prev) => !prev)}
+                onPress={() =>
+                  handleDeviceToggle(
+                    "speaker",
+                    speakerEnabled,
+                    setSpeakerEnabled,
+                    require("../../../assets/images/Nspeaker.png"),
+                    "speaker"
+                  )
+                }
               >
                 <View
                   style={[
@@ -183,7 +248,15 @@ export default function RoomDetailScreen({ navigation }) {
                   airEnabled && styles.verticalSwitchActive,
                 ]}
                 activeOpacity={0.85}
-                onPress={() => setAirEnabled((prev) => !prev)}
+                onPress={() =>
+                  handleDeviceToggle(
+                    "air",
+                    airEnabled,
+                    setAirEnabled,
+                    require("../../../assets/images/Nair.png"),
+                    "air conditioner"
+                  )
+                }
               >
                 <View
                   style={[
@@ -218,7 +291,15 @@ export default function RoomDetailScreen({ navigation }) {
                   humidifierEnabled && styles.verticalSwitchActive,
                 ]}
                 activeOpacity={0.85}
-                onPress={() => setHumidifierEnabled((prev) => !prev)}
+                onPress={() =>
+                  handleDeviceToggle(
+                    "humidifier",
+                    humidifierEnabled,
+                    setHumidifierEnabled,
+                    require("../../../assets/images/Nhumidifier.png"),
+                    "humidifier"
+                  )
+                }
               >
                 <View
                   style={[
@@ -273,6 +354,60 @@ export default function RoomDetailScreen({ navigation }) {
           <View style={styles.bottomSpacer} />
         </ScrollView>
       </View>
+
+      <Modal
+        visible={confirmVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeTurnOffModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              activeOpacity={0.75}
+              onPress={closeTurnOffModal}
+            >
+              <Feather name="x" size={28} color="#7B8798" />
+            </TouchableOpacity>
+
+            <View style={styles.modalImageCircle}>
+              <View style={styles.modalRingOne} />
+              <View style={styles.modalRingTwo} />
+              <View style={styles.modalRingThree} />
+              {selectedDevice?.imageSource ? (
+                <Image
+                  source={selectedDevice.imageSource}
+                  style={styles.modalDeviceImage}
+                  resizeMode="contain"
+                />
+              ) : null}
+            </View>
+
+            <Text style={styles.modalTitle}>Manage your {selectedDevice?.title || "device"}</Text>
+
+            <Text style={styles.modalDescription}>
+              This space is reserved for the relevant body type content text
+            </Text>
+
+            <TouchableOpacity
+              style={styles.modalPrimaryButton}
+              activeOpacity={0.85}
+              onPress={confirmTurnOff}
+            >
+              <Text style={styles.modalPrimaryButtonText}>Turn off</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalSecondaryButton}
+              activeOpacity={0.85}
+              onPress={closeTurnOffModal}
+            >
+              <Text style={styles.modalSecondaryButtonText}>Dismiss</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -587,5 +722,131 @@ const styles = StyleSheet.create({
 
   bottomSpacer: {
     height: 10,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(36, 50, 74, 0.28)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 18,
+  },
+
+  modalCard: {
+    width: "100%",
+    maxWidth: 440,
+    borderRadius: 24,
+    backgroundColor: "#FFFFFF",
+    paddingTop: 22,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    alignItems: "center",
+    position: "relative",
+  },
+
+  modalCloseButton: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 5,
+  },
+
+  modalImageCircle: {
+    width: 132,
+    height: 132,
+    borderRadius: 66,
+    backgroundColor: "#F3F5F8",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 22,
+    position: "relative",
+  },
+
+  modalRingOne: {
+    position: "absolute",
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 1,
+    borderColor: "#E5E9EF",
+  },
+
+  modalRingTwo: {
+    position: "absolute",
+    width: 126,
+    height: 126,
+    borderRadius: 63,
+    borderWidth: 1,
+    borderColor: "#E9EDF3",
+  },
+
+  modalRingThree: {
+    position: "absolute",
+    width: 156,
+    height: 156,
+    borderRadius: 78,
+    borderWidth: 1,
+    borderColor: "#EEF2F7",
+  },
+
+  modalDeviceImage: {
+    width: 74,
+    height: 74,
+  },
+
+  modalTitle: {
+    fontSize: 22,
+    lineHeight: 30,
+    color: "#2E333A",
+    fontFamily: "CatamaranBold",
+    textAlign: "center",
+  },
+
+  modalDescription: {
+    marginTop: 10,
+    fontSize: 16,
+    lineHeight: 24,
+    color: "#7E8A9B",
+    fontFamily: "NotoSansRegular",
+    textAlign: "center",
+    paddingHorizontal: 6,
+  },
+
+  modalPrimaryButton: {
+    marginTop: 28,
+    width: "100%",
+    height: 62,
+    borderRadius: 20,
+    backgroundColor: "#2F80ED",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  modalPrimaryButtonText: {
+    fontSize: 17,
+    lineHeight: 24,
+    color: "#FFFFFF",
+    fontFamily: "NotoSansMedium",
+  },
+
+  modalSecondaryButton: {
+    marginTop: 16,
+    width: "100%",
+    height: 62,
+    borderRadius: 20,
+    backgroundColor: "#EEF0F3",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  modalSecondaryButtonText: {
+    fontSize: 17,
+    lineHeight: 24,
+    color: "#7B8798",
+    fontFamily: "NotoSansMedium",
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -9,8 +9,11 @@ import {
   Image,
   ScrollView,
   Switch,
+  PanResponder,
 } from "react-native";
 import { Feather, Entypo } from "@expo/vector-icons";
+
+const TOTAL_VOLUME_TICKS = 16;
 
 export default function DeviceDetailScreen({ navigation }) {
   const [isOn, setIsOn] = useState(true);
@@ -18,6 +21,7 @@ export default function DeviceDetailScreen({ navigation }) {
   const [morningCoffeeEnabled, setMorningCoffeeEnabled] = useState(false);
   const [movieNightEnabled, setMovieNightEnabled] = useState(true);
   const [birthdayEnabled, setBirthdayEnabled] = useState(false);
+  const [volumeTrackWidth, setVolumeTrackWidth] = useState(0);
 
   const handleGoBack = () => {
     navigation.goBack();
@@ -30,6 +34,30 @@ export default function DeviceDetailScreen({ navigation }) {
   const decreaseVolume = () => {
     setVolume((prev) => Math.max(prev - 5, 0));
   };
+
+  const updateVolumeFromTouch = (locationX) => {
+    if (!volumeTrackWidth) return;
+
+    const nextValue = Math.round((locationX / volumeTrackWidth) * 100);
+    setVolume(Math.max(0, Math.min(100, nextValue)));
+  };
+
+  const volumePanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: (event) => {
+          updateVolumeFromTouch(event.nativeEvent.locationX);
+        },
+        onPanResponderMove: (event) => {
+          updateVolumeFromTouch(event.nativeEvent.locationX);
+        },
+      }),
+    [volumeTrackWidth]
+  );
+
+  const activeTicks = Math.round((volume / 100) * TOTAL_VOLUME_TICKS);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -63,25 +91,25 @@ export default function DeviceDetailScreen({ navigation }) {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-         <View style={styles.deviceImageSection}>
-  <Image
-    source={require("../../../assets/images/Ndaire.png")}
-    style={styles.deviceCircleImage}
-    resizeMode="contain"
-  />
+          <View style={styles.deviceImageSection}>
+            <Image
+              source={require("../../../assets/images/Ndaire.png")}
+              style={styles.deviceCircleImage}
+              resizeMode="contain"
+            />
 
-  <Image
-    source={require("../../../assets/images/Naltgölge.png")}
-    style={styles.deviceBottomShadow}
-    resizeMode="contain"
-  />
+            <Image
+              source={require("../../../assets/images/Naltgölge.png")}
+              style={styles.deviceBottomShadow}
+              resizeMode="contain"
+            />
 
-  <Image
-    source={require("../../../assets/images/Nspeaker.png")}
-    style={styles.deviceImage}
-    resizeMode="contain"
-  />
-</View>
+            <Image
+              source={require("../../../assets/images/Nspeaker.png")}
+              style={styles.deviceImage}
+              resizeMode="contain"
+            />
+          </View>
 
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Status</Text>
@@ -134,7 +162,7 @@ export default function DeviceDetailScreen({ navigation }) {
                 style={[
                   styles.volumeFill,
                   {
-                    width: `${Math.max(volume, 8)}%`,
+                    width: `${volume}%`,
                   },
                 ]}
               />
@@ -146,24 +174,49 @@ export default function DeviceDetailScreen({ navigation }) {
                     activeOpacity={0.8}
                     onPress={decreaseVolume}
                   >
-                    <Feather name="volume-2" size={16} color="#FFFFFF" />
+                    <Feather name="volume-2" size={28} color="#FFFFFF" />
                   </TouchableOpacity>
 
-                  <View style={styles.ticksWrap}>
-                    {Array.from({ length: 12 }).map((_, index) => (
-                      <View key={index} style={styles.tick} />
-                    ))}
+                  <View
+                    style={styles.volumeTrackTouchArea}
+                    onLayout={(event) =>
+                      setVolumeTrackWidth(event.nativeEvent.layout.width)
+                    }
+                    {...volumePanResponder.panHandlers}
+                  >
+                    <View style={styles.ticksWrap}>
+                      {Array.from({ length: TOTAL_VOLUME_TICKS }).map((_, index) => {
+                        const isActive = index < activeTicks;
+                        const isLarge = index % 2 === 0;
+
+                        return (
+                          <TouchableOpacity
+                            key={index}
+                            activeOpacity={0.9}
+                            onPress={() => {
+                              const nextVolume = Math.round(
+                                ((index + 1) / TOTAL_VOLUME_TICKS) * 100
+                              );
+                              setVolume(nextVolume);
+                            }}
+                            style={styles.tickPressArea}
+                          >
+                            <View
+                              style={[
+                                styles.tickLine,
+                                isLarge ? styles.tickLarge : styles.tickSmall,
+                                isActive ? styles.tickActive : styles.tickInactive,
+                              ]}
+                            />
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
                   </View>
                 </View>
 
                 <View style={styles.volumeRight}>
-                  <View style={styles.ticksWrapRight}>
-                    {Array.from({ length: 6 }).map((_, index) => (
-                      <View key={index} style={styles.tickRight} />
-                    ))}
-                  </View>
-
-                  <Text style={styles.volumePercent}>{volume} %</Text>
+                  <Text style={styles.volumePercent}>{volume}%</Text>
 
                   <TouchableOpacity
                     style={styles.volumePlusButton}
@@ -200,7 +253,7 @@ export default function DeviceDetailScreen({ navigation }) {
               </View>
 
               <Image
-                source={require("../../../assets/images/music-cover.png")}
+                source={require("../../../assets/images/Nmüzik.png")}
                 style={styles.musicImage}
                 resizeMode="cover"
               />
@@ -374,38 +427,38 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
   },
 
- deviceImageSection: {
-  height: 420,
-  alignItems: "center",
-  justifyContent: "center",
-  marginTop: -42,
-  marginBottom: 4,
-  position: "relative",
-  overflow: "hidden",
-},
+  deviceImageSection: {
+    height: 420,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: -42,
+    marginBottom: 4,
+    position: "relative",
+    overflow: "hidden",
+  },
 
-deviceCircleImage: {
-  position: "absolute",
-  width: 330,
-  height: 435,
-  top: -6,
-  zIndex: 0,
-},
+  deviceCircleImage: {
+    position: "absolute",
+    width: 330,
+    height: 435,
+    top: -6,
+    zIndex: 0,
+  },
 
-deviceBottomShadow: {
-  position: "absolute",
-  width: 310,
-  height: 44,
-  bottom: 34,
-  zIndex: 1,
-},
+  deviceBottomShadow: {
+    position: "absolute",
+    width: 310,
+    height: 44,
+    bottom: 34,
+    zIndex: 1,
+  },
 
-deviceImage: {
-  width: 250,
-  height: 290,
-  marginTop: 74,
-  zIndex: 2,
-},
+  deviceImage: {
+    width: 250,
+    height: 290,
+    marginTop: 74,
+    zIndex: 2,
+  },
 
   divider: {
     height: 1,
@@ -498,11 +551,12 @@ deviceImage: {
   },
 
   volumeCard: {
-    height: 52,
-    borderRadius: 14,
+    height: 58,
+    borderRadius: 18,
     backgroundColor: "#EEF2F7",
     overflow: "hidden",
-    marginTop: 12,
+    marginTop: 9,
+    marginHorizontal: 12,
     position: "relative",
   },
 
@@ -519,29 +573,59 @@ deviceImage: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 14,
+    paddingHorizontal: 18,
   },
 
   volumeLeft: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
+    paddingRight: 16,
   },
 
   volumeAdjustButton: {
-    marginRight: 12,
+    marginRight: 18,
+  },
+
+  volumeTrackTouchArea: {
+    flex: 1,
+    justifyContent: "center",
+    height: 68,
   },
 
   ticksWrap: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    height: 40,
   },
 
-  tick: {
-    width: 1.5,
-    height: 18,
-    backgroundColor: "#DDEBFF",
-    borderRadius: 1,
-    marginRight: 10,
+  tickPressArea: {
+    width: 10,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  tickLine: {
+    width: 2,
+    borderRadius: 999,
+  },
+
+  tickLarge: {
+    height: 22,
+  },
+
+  tickSmall: {
+    height: 15,
+  },
+
+  tickActive: {
+    backgroundColor: "#EAF3FF",
+  },
+
+  tickInactive: {
+    backgroundColor: "#C8D0DB",
   },
 
   volumeRight: {
@@ -549,29 +633,15 @@ deviceImage: {
     alignItems: "center",
   },
 
-  ticksWrapRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 10,
-  },
-
-  tickRight: {
-    width: 1.5,
-    height: 14,
-    backgroundColor: "#CDD5E1",
-    borderRadius: 1,
-    marginRight: 8,
-  },
-
   volumePercent: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 18,
+    lineHeight: 24,
     color: "#8B97A8",
     fontFamily: "NotoSansMedium",
   },
 
   volumePlusButton: {
-    marginLeft: 8,
+    marginLeft: 10,
   },
 
   appsHeader: {
@@ -604,14 +674,12 @@ deviceImage: {
     fontFamily: "NotoSansMedium",
   },
 
-    appCard: {
-    backgroundColor: "#FFFFFF", 
+  appCard: {
+    backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 14,
-
     borderWidth: 1,
     borderColor: "#EEF1F5",
-
     shadowColor: "#101828",
     shadowOpacity: 0.08,
     shadowRadius: 24,
@@ -749,15 +817,12 @@ deviceImage: {
   },
 
   scenesCard: {
-    backgroundColor: "#FFFFFF", // 🔥 aynı mantık
+    backgroundColor: "#FFFFFF",
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 8,
-
     borderWidth: 1,
     borderColor: "#EEF1F5",
-
-    // 🔥 Figma shadow
     shadowColor: "#101828",
     shadowOpacity: 0.08,
     shadowRadius: 24,
